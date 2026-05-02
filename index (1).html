@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rate Your Albums">
+<meta name="theme-color" content="#0a0a0a">
+<title>Rate Your Albums</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0a0a0a; --surface: #141414; --surface2: #1e1e1e;
+    --border: #2a2a2a; --text: #f0f0f0; --muted: #666;
+    --accent: #e8ff47; --accent-dim: rgba(232,255,71,0.12);
+    --font-display: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-display); min-height: 100vh; overflow-x: hidden; }
+
+  .login-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px; text-align: center;
+  }
+  .login-logo { font-size: 32px; font-weight: 800; color: var(--accent); margin-bottom: 8px; letter-spacing: -0.03em; }
+  .login-logo span { color: var(--text); }
+  .login-sub { font-size: 14px; color: var(--muted); margin-bottom: 48px; line-height: 1.7; }
+  .login-btn {
+    background: #1DB954; color: #000; border: none; border-radius: 50px;
+    padding: 16px 32px; font-family: var(--font-display); font-size: 15px; font-weight: 800;
+    cursor: pointer; display: flex; align-items: center; gap: 10px; transition: opacity 0.2s;
+  }
+  .login-btn:active { opacity: 0.8; }
+
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,0.92); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 56px;
+  }
+  .logo { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; color: var(--accent); }
+  .logo span { color: var(--text); }
+  .logout-btn {
+    font-size: 11px; color: var(--muted); background: none; border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 10px; cursor: pointer; font-family: var(--font-display);
+  }
+
+  .tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+    background: var(--bg); position: sticky; top: 56px; z-index: 99;
+  }
+  .tab {
+    flex: 1; padding: 14px 0; text-align: center;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; border: none; background: none;
+    transition: color 0.2s; position: relative;
+  }
+  .tab.active { color: var(--accent); }
+  .tab.active::after {
+    content: ''; position: absolute; bottom: -1px; left: 20%; right: 20%;
+    height: 2px; background: var(--accent); border-radius: 2px;
+  }
+
+  .view { display: none; padding: 0 0 100px; }
+  .view.active { display: block; }
+
+  .search-wrap { padding: 16px; }
+  .search-box { display: flex; gap: 8px; }
+  .search-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; color: var(--text);
+    font-family: var(--font-display); font-size: 15px; outline: none; transition: border-color 0.2s;
+  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .search-btn {
+    background: var(--accent); color: #000; border: none; border-radius: 10px;
+    padding: 12px 18px; font-family: var(--font-display); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .search-btn:active { opacity: 0.8; }
+
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; }
+  .album-card {
+    background: var(--surface); border-radius: 12px; overflow: hidden;
+    cursor: pointer; border: 1px solid var(--border);
+    transition: transform 0.15s, border-color 0.15s; position: relative;
+  }
+  .album-card:active { transform: scale(0.97); }
+  .album-card.rated { border-color: var(--accent); }
+  .album-cover { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; background: var(--surface2); }
+  .album-info { padding: 10px 10px 12px; }
+  .album-title { font-size: 12px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .album-artist { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .album-year { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; }
+  .rating-badge {
+    position: absolute; top: 8px; right: 8px;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500; border: 1.5px solid;
+  }
+
+  .score-s { border-color: #e8ff47; color: #e8ff47; background: rgba(232,255,71,0.15); }
+  .score-a { border-color: #47d4ff; color: #47d4ff; background: rgba(71,212,255,0.15); }
+  .score-b { border-color: #47ff9c; color: #47ff9c; background: rgba(71,255,156,0.15); }
+  .score-c { border-color: #ffaa47; color: #ffaa47; background: rgba(255,170,71,0.15); }
+  .score-d { border-color: #ff6b47; color: #ff6b47; background: rgba(255,107,71,0.15); }
+  .score-f { border-color: #ff4747; color: #ff4747; background: rgba(255,71,71,0.15); }
+
+  .score-bar-wrap { padding: 0 16px 20px; }
+  .score-bar-track { height: 4px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1), background 0.4s; }
+
+  .ratings-list { padding: 0 16px; }
+  .rating-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .rating-row:last-child { border-bottom: none; }
+  .rating-row-cover { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+  .rating-row-info { flex: 1; min-width: 0; }
+  .rating-row-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rating-row-artist { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .rating-row-score { font-family: var(--font-mono); font-size: 20px; font-weight: 500; flex-shrink: 0; width: 40px; text-align: right; }
+
+  .section-header { padding: 20px 16px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  .empty { text-align: center; padding: 60px 32px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    display: none; align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    width: 100%; background: var(--surface); border-radius: 24px 24px 0 0;
+    padding: 0 0 40px; max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+  .modal-cover-wrap { position: relative; }
+  .modal-cover { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; max-height: 280px; }
+  .modal-cover-gradient { position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(transparent, var(--surface)); }
+  .modal-body { padding: 0 20px; }
+  .modal-title { font-size: 22px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+  .modal-artist { font-size: 15px; color: var(--muted); margin-bottom: 4px; }
+  .modal-meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+
+  .score-display { text-align: center; margin-bottom: 8px; }
+  .score-number { font-family: var(--font-mono); font-size: 64px; font-weight: 500; line-height: 1; transition: color 0.3s; }
+  .score-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 6px; font-weight: 600; }
+
+  .slider-wrap { margin: 16px 0 24px; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 6px; background: var(--surface2); border-radius: 6px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 0 4px rgba(232,255,71,0.2); }
+  .slider-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  .comment-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; color: var(--text);
+    font-family: var(--font-display); font-size: 14px; line-height: 1.6;
+    outline: none; resize: none; height: 90px; transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .save-btn {
+    width: 100%; padding: 16px; margin-top: 16px;
+    background: var(--accent); color: #000; border: none; border-radius: 14px;
+    font-family: var(--font-display); font-size: 15px; font-weight: 800;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+  }
+  .save-btn:active { transform: scale(0.98); }
+  .delete-btn {
+    width: 100%; padding: 14px; margin-top: 8px;
+    background: transparent; color: #ff4747; border: 1px solid rgba(255,71,71,0.3);
+    border-radius: 14px; font-family: var(--font-display); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .delete-btn:active { background: rgba(255,71,71,0.1); }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 500; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .dist-wrap { padding: 0 16px 24px; }
+  .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .dist-label { font-family: var(--font-mono); font-size: 12px; color: var(--muted); width: 50px; flex-shrink: 0; }
+  .dist-bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .dist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .dist-count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); width: 20px; text-align: right; }
+
+  .spinner { display: flex; justify-content: center; padding: 40px; }
+  .spin { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sort-wrap { display: flex; gap: 6px; padding: 0 16px 16px; overflow-x: auto; scrollbar-width: none; }
+  .sort-wrap::-webkit-scrollbar { display: none; }
+  .sort-btn {
+    padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-family: var(--font-display); font-size: 12px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  }
+  .sort-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen" style="display:none">
+  <div class="login-logo">RATE<span>YOUR</span>ALBUMS</div>
+  <div class="login-sub">Spotify 계정으로 로그인하면<br>앨범을 검색하고 레이팅할 수 있어요</div>
+  <button class="login-btn" onclick="spotifyLogin()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+    </svg>
+    Spotify로 로그인
+  </button>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="logo">RATE<span>YOUR</span>ALBUMS</div>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </header>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('search', this)">Search</button>
+    <button class="tab" onclick="switchTab('ratings', this)">My Ratings</button>
+    <button class="tab" onclick="switchTab('stats', this)">Stats</button>
+  </div>
+  <div class="view active" id="view-search">
+    <div class="search-wrap">
+      <div class="search-box">
+        <input class="search-input" id="searchInput" type="text" placeholder="앨범 또는 아티스트 검색..." autocomplete="off">
+        <button class="search-btn" onclick="doSearch()">검색</button>
+      </div>
+    </div>
+    <div id="searchResults"></div>
+  </div>
+  <div class="view" id="view-ratings">
+    <div class="sort-wrap">
+      <button class="sort-btn active" onclick="setSort('date', this)">최근 순</button>
+      <button class="sort-btn" onclick="setSort('score-desc', this)">높은 점수</button>
+      <button class="sort-btn" onclick="setSort('score-asc', this)">낮은 점수</button>
+      <button class="sort-btn" onclick="setSort('alpha', this)">알파벳 순</button>
+    </div>
+    <div id="myRatingsList"></div>
+  </div>
+  <div class="view" id="view-stats">
+    <div id="statsContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-cover-wrap">
+      <img class="modal-cover" id="modalCover" src="" alt="">
+      <div class="modal-cover-gradient"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-artist" id="modalArtist"></div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <div class="score-display">
+        <div class="score-number" id="scoreDisplay">50</div>
+        <div class="score-label" id="gradeDisplay">D — MEDIOCRE</div>
+      </div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-track">
+          <div class="score-bar-fill" id="scoreBarFill" style="width:50%"></div>
+        </div>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="scoreSlider" min="0" max="100" value="50" oninput="updateScore(this.value)">
+        <div class="slider-labels"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+      <div class="comment-label">코멘트</div>
+      <textarea id="commentInput" placeholder="이 앨범에 대한 생각을 남겨보세요..."></textarea>
+      <button class="save-btn" onclick="saveRating()">저장하기</button>
+      <button class="delete-btn" id="deleteBtn" style="display:none" onclick="deleteRating()">삭제하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CLIENT_ID = '6aa25955b2964a48aef7603893ca76a1';
+const REDIRECT_URI = 'https://nuyhad.github.io/rateyouralbums/';
+const SCOPES = 'user-read-private';
+
+let currentAlbum = null;
+let currentSort = 'date';
+let ratings = JSON.parse(localStorage.getItem('ryaRatings') || '{}');
+
+function generateCodeVerifier() {
+  const arr = new Uint8Array(64);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function generateCodeChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function spotifyLogin() {
+  const verifier = generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
+  sessionStorage.setItem('pkce_verifier', verifier);
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: REDIRECT_URI,
+    scope: SCOPES,
+    code_challenge_method: 'S256',
+    code_challenge: challenge,
+  });
+  window.location.href = 'https://accounts.spotify.com/authorize?' + params;
+}
+
+async function exchangeCode(code) {
+  const verifier = sessionStorage.getItem('pkce_verifier');
+  if (!verifier) { document.getElementById('loginScreen').style.display = 'flex'; return; }
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: CLIENT_ID,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+      code_verifier: verifier,
+    })
+  });
+  const d = await r.json();
+  if (d.access_token) {
+    localStorage.setItem('rya_token', d.access_token);
+    localStorage.setItem('rya_expiry', Date.now() + (d.expires_in - 60) * 1000);
+    if (d.refresh_token) localStorage.setItem('rya_refresh', d.refresh_token);
+    sessionStorage.removeItem('pkce_verifier');
+    window.history.replaceState({}, '', REDIRECT_URI);
+    showApp();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+}
+
+async function refreshAccessToken() {
+  const rt = localStorage.getItem('rya_refresh');
+  if (!rt) return null;
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: CLIENT_ID, grant_type: 'refresh_token', refresh_token: rt })
+  });
+  const d = await r.json();
+  if (d.access_token) {
+    localStorage.setItem('rya_token', d.access_token);
+    localStorage.setItem('rya_expiry', Date.now() + (d.expires_in - 60) * 1000);
+    return d.access_token;
+  }
+  return null;
+}
+
+async function getToken() {
+  const expiry = parseInt(localStorage.getItem('rya_expiry') || '0');
+  if (Date.now() < expiry) return localStorage.getItem('rya_token');
+  return await refreshAccessToken();
+}
+
+function logout() {
+  ['rya_token','rya_expiry','rya_refresh'].forEach(k => localStorage.removeItem(k));
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+function scoreGrade(n) {
+  if (n >= 90) return { label: 'S — MASTERPIECE', cls: 'score-s', color: '#e8ff47' };
+  if (n >= 80) return { label: 'A — GREAT', cls: 'score-a', color: '#47d4ff' };
+  if (n >= 70) return { label: 'B — GOOD', cls: 'score-b', color: '#47ff9c' };
+  if (n >= 60) return { label: 'C — DECENT', cls: 'score-c', color: '#ffaa47' };
+  if (n >= 50) return { label: 'D — MEDIOCRE', cls: 'score-d', color: '#ff6b47' };
+  return { label: 'F — BAD', cls: 'score-f', color: '#ff4747' };
+}
+
+function saveRatings() { localStorage.setItem('ryaRatings', JSON.stringify(ratings)); }
+
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  const el = document.getElementById('searchResults');
+  el.innerHTML = '<div class="spinner"><div class="spin"></div></div>';
+  try {
+    const t = await getToken();
+    if (!t) { logout(); return; }
+    const r = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=album&limit=20&market=KR`, {
+      headers: { 'Authorization': 'Bearer ' + t }
+    });
+    const d = await r.json();
+    renderGrid(d.albums?.items || [], el);
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠</div>검색 중 오류가 발생했어요</div>';
+  }
+}
+
+function renderGrid(albums, container) {
+  if (!albums.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">◎</div>검색 결과가 없어요</div>';
+    return;
+  }
+  container.innerHTML = '<div class="section-header">검색 결과 ' + albums.length + '개</div>' +
+    '<div class="results-grid">' +
+    albums.map(a => {
+      const cover = a.images?.[0]?.url || '';
+      const year = a.release_date?.slice(0,4) || '';
+      const myRating = ratings[a.id];
+      const badge = myRating ? `<div class="rating-badge ${scoreGrade(myRating.score).cls}">${myRating.score}</div>` : '';
+      const safe = encodeURIComponent(JSON.stringify(a));
+      return `<div class="album-card ${myRating?'rated':''}" onclick="openModalEncoded('${safe}')">
+        <img class="album-cover" src="${cover}" alt="" loading="lazy">
+        ${badge}
+        <div class="album-info">
+          <div class="album-title">${a.name}</div>
+          <div class="album-artist">${a.artists?.map(x=>x.name).join(', ')}</div>
+          <div class="album-year">${year} · ${a.total_tracks}트랙</div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function openModalEncoded(enc) { openModal(JSON.parse(decodeURIComponent(enc))); }
+
+function openModal(album) {
+  currentAlbum = album;
+  const ex = ratings[album.id];
+  const score = ex ? ex.score : 50;
+  document.getElementById('modalCover').src = album.images?.[0]?.url || '';
+  document.getElementById('modalTitle').textContent = album.name;
+  document.getElementById('modalArtist').textContent = album.artists?.map(x=>x.name).join(', ');
+  document.getElementById('modalMeta').textContent = (album.release_date?.slice(0,4)||'') + ' · ' + (album.total_tracks||'') + ' tracks';
+  document.getElementById('scoreSlider').value = score;
+  document.getElementById('commentInput').value = ex?.comment || '';
+  document.getElementById('deleteBtn').style.display = ex ? 'block' : 'none';
+  updateScore(score);
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function updateScore(val) {
+  val = parseInt(val);
+  const g = scoreGrade(val);
+  document.getElementById('scoreDisplay').textContent = val;
+  document.getElementById('scoreDisplay').style.color = g.color;
+  document.getElementById('gradeDisplay').textContent = g.label;
+  document.getElementById('gradeDisplay').style.color = g.color;
+  document.getElementById('scoreBarFill').style.width = val + '%';
+  document.getElementById('scoreBarFill').style.background = g.color;
+}
+
+function saveRating() {
+  if (!currentAlbum) return;
+  ratings[currentAlbum.id] = {
+    score: parseInt(document.getElementById('scoreSlider').value),
+    comment: document.getElementById('commentInput').value.trim(),
+    album: {
+      id: currentAlbum.id, name: currentAlbum.name,
+      artist: currentAlbum.artists?.map(x=>x.name).join(', '),
+      year: currentAlbum.release_date?.slice(0,4),
+      cover: currentAlbum.images?.[0]?.url,
+      tracks: currentAlbum.total_tracks,
+    },
+    savedAt: Date.now()
+  };
+  saveRatings();
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  renderMyRatings(); renderStats();
+}
+
+function deleteRating() {
+  if (!currentAlbum) return;
+  delete ratings[currentAlbum.id];
+  saveRatings();
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  renderMyRatings(); renderStats();
+}
+
+function setSort(s, btn) {
+  currentSort = s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMyRatings();
+}
+
+function renderMyRatings() {
+  const el = document.getElementById('myRatingsList');
+  let items = Object.values(ratings);
+  if (!items.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">♫</div>아직 레이팅한 앨범이 없어요.<br>검색 탭에서 앨범을 찾아보세요!</div>';
+    return;
+  }
+  if (currentSort==='date') items.sort((a,b)=>b.savedAt-a.savedAt);
+  else if (currentSort==='score-desc') items.sort((a,b)=>b.score-a.score);
+  else if (currentSort==='score-asc') items.sort((a,b)=>a.score-b.score);
+  else items.sort((a,b)=>a.album.name.localeCompare(b.album.name));
+  el.innerHTML = '<div class="section-header">'+items.length+'개의 레이팅</div><div class="ratings-list">' +
+    items.map(r => {
+      const g = scoreGrade(r.score);
+      const safe = encodeURIComponent(JSON.stringify({
+        id:r.album.id, name:r.album.name, artists:[{name:r.album.artist}],
+        release_date:r.album.year, total_tracks:r.album.tracks, images:[{url:r.album.cover}]
+      }));
+      return `<div class="rating-row" onclick="openModalEncoded('${safe}')">
+        <img class="rating-row-cover" src="${r.album.cover}" alt="">
+        <div class="rating-row-info">
+          <div class="rating-row-title">${r.album.name}</div>
+          <div class="rating-row-artist">${r.album.artist} · ${r.album.year||''}</div>
+        </div>
+        <div class="rating-row-score" style="color:${g.color}">${r.score}</div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function renderStats() {
+  const el = document.getElementById('statsContent');
+  const items = Object.values(ratings);
+  if (!items.length) {
+    el.innerHTML = '<div class="empty" style="padding-top:80px"><div class="empty-icon">◈</div>레이팅이 없어요.<br>앨범을 레이팅하면 통계가 보여요!</div>';
+    return;
+  }
+  const avg = Math.round(items.reduce((s,r)=>s+r.score,0)/items.length);
+  const best = items.reduce((a,b)=>a.score>b.score?a:b);
+  const worst = items.reduce((a,b)=>a.score<b.score?a:b);
+  const bands = [['90-100',r=>r.score>=90],['80-89',r=>r.score>=80&&r.score<90],['70-79',r=>r.score>=70&&r.score<80],['60-69',r=>r.score>=60&&r.score<70],['50-59',r=>r.score>=50&&r.score<60],['0-49',r=>r.score<50]];
+  const colors = ['#e8ff47','#47d4ff','#47ff9c','#ffaa47','#ff6b47','#ff4747'];
+  const counts = bands.map(([,f])=>items.filter(f).length);
+  const max = Math.max(...counts,1);
+  el.innerHTML = `
+    <div class="section-header">총 통계</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:var(--accent)">${items.length}</div><div class="stat-label">레이팅한 앨범</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${scoreGrade(avg).color}">${avg}</div><div class="stat-label">평균 점수</div></div>
+    </div>
+    <div class="section-header">최고 & 최저</div>
+    <div style="padding:0 16px 20px;display:flex;flex-direction:column;gap:10px">
+      ${[['최고',best],['최저',worst]].map(([label,r])=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border-radius:14px;border:1px solid var(--border)">
+        <img style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0" src="${r.album.cover}" alt="">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px">${label}</div>
+          <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.album.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${r.album.artist}</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:20px;color:${scoreGrade(r.score).color};flex-shrink:0">${r.score}</div>
+      </div>`).join('')}
+    </div>
+    <div class="section-header">점수 분포</div>
+    <div class="dist-wrap">
+      ${bands.map(([label],i)=>`
+      <div class="dist-row">
+        <div class="dist-label">${label}</div>
+        <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${counts[i]/max*100}%;background:${colors[i]}"></div></div>
+        <div class="dist-count">${counts[i]}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab==='ratings') renderMyRatings();
+  if (tab==='stats') renderStats();
+}
+
+(async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) { await exchangeCode(code); return; }
+  const t = await getToken();
+  if (t) showApp();
+  else document.getElementById('loginScreen').style.display = 'flex';
+})();
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
