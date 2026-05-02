@@ -297,7 +297,7 @@
   </div>
   <div id="searchResults">
     <div class="home-hero">
-      <div class="home-hero-title">✦ <span id="heroTitle"></span></div>
+      <div class="home-hero-title"> <span id="heroTitle"></span></div>
       <div class="home-hero-sub" id="heroSub"></div>
       <button class="home-refresh" id="refreshBtn" onclick="loadCuration()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -394,8 +394,8 @@ const T = {
     highest: 'Highest', lowest: 'Lowest',
     distHint: '— tap to see list',
     scoreLabels: {
-      100: '✦ PERFECT ✦', 90: 'S — MASTERPIECE', 80: 'A — GREAT',
-      70: 'B — GOOD', 60: 'C — DECENT', 50: 'D — MEDIOCRE', 0: 'F — BAD'
+      100: 'GOAT', 90: 'MASTERPIECE', 80: 'GREAT',
+      70: 'GOOD', 60: 'DECENT', 50: 'MEDIOCRE', 0: 'BAD'
     },
     bandSubtitle: n => `${n} album${n !== 1 ? 's' : ''}`,
     searchError: 'Something went wrong. Try again.',
@@ -421,8 +421,8 @@ const T = {
     highest: '최고', lowest: '최저',
     distHint: '— 탭해서 목록 보기',
     scoreLabels: {
-      100: '✦ PERFECT ✦', 90: 'S — 마스터피스', 80: 'A — 훌륭함',
-      70: 'B — 좋음', 60: 'C — 괜찮음', 50: 'D — 평범함', 0: 'F — 별로'
+      100: '개고트', 90: '내 인생의 앨범들', 80: '훌륭',
+      70: '좋음', 60: 'ㄱㅊ', 50: '무난', 0: 'ㅗ'
     },
     bandSubtitle: n => `${n}개의 앨범`,
     searchError: '오류가 발생했어요. 다시 시도해주세요.',
@@ -448,8 +448,8 @@ const T = {
     highest: 'Melhor', lowest: 'Pior',
     distHint: '— toque para ver lista',
     scoreLabels: {
-      100: '✦ PERFEITO ✦', 90: 'S — OBRA-PRIMA', 80: 'A — ÓTIMO',
-      70: 'B — BOM', 60: 'C — RAZOÁVEL', 50: 'D — MEDIANO', 0: 'F — RUIM'
+      100: 'O MITO', 90: 'OBRA-PRIMA', 80: 'ÓTIMO',
+      70: 'BOM', 60: 'RAZOÁVEL', 50: 'MEDIANO', 0: 'RUIM'
     },
     bandSubtitle: n => `${n} álbum${n !== 1 ? 'ns' : ''}`,
     searchError: 'Algo deu errado. Tente novamente.',
@@ -503,18 +503,18 @@ function applyTranslations() {
 // ── CURATION ──────────────────────────────────────────────────────
 const LASTFM_KEY = 'e8c18f3eac290af9a7bda25d563df9f0';
 const CURATION_SOURCES = [
-  { method: 'chart.gettopalbums', label: '🔥 Trending Now', params: '' },
-  { method: 'tag.gettopalbums', label: '🎸 Rock', params: '&tag=rock' },
-  { method: 'tag.gettopalbums', label: '🎹 Jazz', params: '&tag=jazz' },
-  { method: 'tag.gettopalbums', label: '💿 Hip-Hop', params: '&tag=hip-hop' },
-  { method: 'tag.gettopalbums', label: '🌙 R&B', params: '&tag=rnb' },
-  { method: 'tag.gettopalbums', label: '⚡ Electronic', params: '&tag=electronic' },
-  { method: 'tag.gettopalbums', label: '🎻 Classical', params: '&tag=classical' },
-  { method: 'tag.gettopalbums', label: '🌊 Indie', params: '&tag=indie' },
-  { method: 'tag.gettopalbums', label: '🖤 Metal', params: '&tag=metal' },
-  { method: 'tag.gettopalbums', label: '🎷 Soul', params: '&tag=soul' },
-  { method: 'tag.gettopalbums', label: '🌿 Folk', params: '&tag=folk' },
-  { method: 'tag.gettopalbums', label: '🎙️ K-Pop', params: '&tag=k-pop' },
+  { method: 'chart.gettopalbums', label: 'Trending Now', params: '' },
+  { method: 'tag.gettopalbums', label: 'Rock', params: '&tag=rock' },
+  { method: 'tag.gettopalbums', label: 'Jazz', params: '&tag=jazz' },
+  { method: 'tag.gettopalbums', label: 'Hip-Hop', params: '&tag=hip-hop' },
+  { method: 'tag.gettopalbums', label: 'R&B', params: '&tag=rnb' },
+  { method: 'tag.gettopalbums', label: 'Electronic', params: '&tag=electronic' },
+  { method: 'tag.gettopalbums', label: 'Classical', params: '&tag=classical' },
+  { method: 'tag.gettopalbums', label: 'Indie', params: '&tag=indie' },
+  { method: 'tag.gettopalbums', label: 'Metal', params: '&tag=metal' },
+  { method: 'tag.gettopalbums', label: 'Soul', params: '&tag=soul' },
+  { method: 'tag.gettopalbums', label: 'Folk', params: '&tag=folk' },
+  { method: 'tag.gettopalbums', label: 'K-Pop', params: '&tag=k-pop' },
 ];
 
 function scoreGrade(n) {
@@ -835,7 +835,7 @@ function switchTab(tab, btn) {
 function resetToHome() {
   document.getElementById('searchResults').innerHTML = `
     <div class="home-hero">
-      <div class="home-hero-title">✦ <span id="heroTitle">${t('heroTitle')}</span></div>
+      <div class="home-hero-title"> <span id="heroTitle">${t('heroTitle')}</span></div>
       <div class="home-hero-sub" id="heroSub">${t('heroSub')}</div>
       <button class="home-refresh" id="refreshBtn" onclick="loadCuration()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
