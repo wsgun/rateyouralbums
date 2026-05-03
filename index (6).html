@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rate Your Albums">
+<meta name="theme-color" content="#0a0a0a">
+<title>Rate Your Albums</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230a0a0a'/><circle cx='16' cy='16' r='10' fill='none' stroke='%23e8ff47' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='%23e8ff47'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0a0a0a; --surface: #141414; --surface2: #1e1e1e;
+    --border: #2a2a2a; --text: #f0f0f0; --muted: #666;
+    --accent: #e8ff47; --accent-dim: rgba(232,255,71,0.12);
+    --font-display: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+    --grid-cols: 2;
+  }
+  @media (min-width: 600px)  { :root { --grid-cols: 3; } }
+  @media (min-width: 900px)  { :root { --grid-cols: 4; } }
+  @media (min-width: 1200px) { :root { --grid-cols: 5; } }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--font-display); min-height: 100vh; overflow-x: hidden; }
+
+  /* AUTH SCREEN */
+  .auth-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px;
+  }
+  .auth-logo { font-size: 28px; font-weight: 800; color: var(--accent); margin-bottom: 4px; letter-spacing: -0.03em; }
+  .auth-logo span { color: var(--text); }
+  .auth-sub { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
+  .auth-box { width: 100%; max-width: 360px; }
+  .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .auth-tab {
+    flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 700;
+    color: var(--muted); cursor: pointer; border: none; background: none;
+    transition: color 0.2s; position: relative;
+  }
+  .auth-tab.active { color: var(--accent); }
+  .auth-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 10%; right: 10%; height: 2px; background: var(--accent); border-radius: 2px; }
+  .auth-field { margin-bottom: 14px; }
+  .auth-field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .auth-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; color: var(--text);
+    font-family: var(--font-display); font-size: 15px; outline: none; transition: border-color 0.2s;
+  }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-btn {
+    width: 100%; padding: 14px; margin-top: 8px;
+    background: var(--accent); color: #000; border: none; border-radius: 12px;
+    font-family: var(--font-display); font-size: 15px; font-weight: 800;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .auth-btn:active { opacity: 0.8; }
+  .auth-error { color: #ff4747; font-size: 13px; margin-top: 10px; text-align: center; min-height: 20px; }
+  .auth-hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+  /* HEADER */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,0.92); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 56px;
+    gap: 12px;
+  }
+  .logo { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; color: var(--accent); white-space: nowrap; }
+  .logo span { color: var(--text); }
+  .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .lang-switcher { display: flex; gap: 3px; }
+  .lang-btn {
+    padding: 4px 7px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .lang-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .user-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-family: var(--font-display); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .user-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 56px; z-index: 99; }
+  .tab {
+    flex: 1; padding: 13px 0; text-align: center;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; border: none; background: none;
+    transition: color 0.2s; position: relative;
+  }
+  .tab.active { color: var(--accent); }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 20%; right: 20%; height: 2px; background: var(--accent); border-radius: 2px; }
+
+  .view { display: none; padding: 0 0 100px; }
+  .view.active { display: block; }
+
+  /* SEARCH */
+  .search-wrap { padding: 16px; max-width: 800px; margin: 0 auto; }
+  .search-box { display: flex; gap: 8px; }
+  .search-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 13px 16px; color: var(--text);
+    font-family: var(--font-display); font-size: 15px; outline: none; transition: border-color 0.2s;
+  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .search-btn {
+    background: var(--accent); color: #000; border: none; border-radius: 10px;
+    padding: 13px 18px; font-family: var(--font-display); font-size: 13px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* GRID */
+  .grid-wrap { padding: 0 16px; }
+  .results-grid { display: grid; grid-template-columns: repeat(var(--grid-cols), 1fr); gap: 12px; }
+  .album-card {
+    background: var(--surface); border-radius: 12px; overflow: hidden;
+    cursor: pointer; border: 1px solid var(--border);
+    transition: transform 0.15s, border-color 0.15s; position: relative;
+  }
+  .album-card:hover { transform: translateY(-2px); border-color: #444; }
+  .album-card:active { transform: scale(0.97); }
+  .album-card.rated { border-color: var(--accent); }
+  .album-cover { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; background: var(--surface2); }
+  .album-info { padding: 9px 10px 11px; }
+  .album-title { font-size: 12px; font-weight: 700; line-height: 1.3; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .album-artist { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rating-badge {
+    position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500; border: 1.5px solid;
+  }
+
+  .score-s { border-color: #e8ff47; color: #e8ff47; background: rgba(232,255,71,0.15); }
+  .score-a { border-color: #47d4ff; color: #47d4ff; background: rgba(71,212,255,0.15); }
+  .score-b { border-color: #47ff9c; color: #47ff9c; background: rgba(71,255,156,0.15); }
+  .score-c { border-color: #ffaa47; color: #ffaa47; background: rgba(255,170,71,0.15); }
+  .score-d { border-color: #ff6b47; color: #ff6b47; background: rgba(255,107,71,0.15); }
+  .score-f { border-color: #ff4747; color: #ff4747; background: rgba(255,71,71,0.15); }
+  .score-perfect { border-color: #fff; color: #fff; background: rgba(255,255,255,0.2); box-shadow: 0 0 8px rgba(232,255,71,0.6); }
+
+  /* HOME */
+  .home-hero { padding: 32px 16px 20px; max-width: 800px; margin: 0 auto; text-align: center; }
+  .home-hero-title { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .home-hero-sub { font-size: 13px; color: var(--muted); }
+  .home-refresh {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+    padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-family: var(--font-display); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .home-refresh:hover { border-color: var(--accent); color: var(--accent); }
+  .home-refresh.spinning svg { animation: spin 0.7s linear infinite; }
+
+  .section-header { padding: 16px 16px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  /* RATINGS LIST */
+  .ratings-list { padding: 0 16px; max-width: 800px; margin: 0 auto; }
+  .rating-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .rating-row:last-child { border-bottom: none; }
+  .rating-row-cover { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+  .rating-row-info { flex: 1; min-width: 0; }
+  .rating-row-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rating-row-artist { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .rating-row-score { font-family: var(--font-mono); font-size: 20px; font-weight: 500; flex-shrink: 0; width: 40px; text-align: right; }
+
+  .empty { text-align: center; padding: 60px 32px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 560px; background: var(--surface);
+    border-radius: 24px 24px 0 0; padding: 0 0 40px;
+    max-height: 92vh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; }
+  .modal-close-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); font-size: 16px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .modal-cover-wrap { position: relative; }
+  .modal-cover { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; max-height: 260px; }
+  .modal-cover-gradient { position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(transparent, var(--surface)); }
+  .modal-body { padding: 0 20px; }
+  .modal-title { font-size: 20px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+  .modal-artist { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+
+  .score-display { text-align: center; margin-bottom: 8px; position: relative; }
+  .score-number { font-family: var(--font-mono); font-size: 64px; font-weight: 500; line-height: 1; transition: color 0.3s; }
+  .score-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px; font-weight: 600; transition: color 0.3s; }
+  .perfect-stars { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 14px; letter-spacing: 4px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .perfect-stars.show { opacity: 1; }
+  .perfect-glow { animation: perfectPulse 1.5s ease-in-out infinite; }
+  @keyframes perfectPulse {
+    0%,100% { text-shadow: 0 0 20px rgba(232,255,71,0.8), 0 0 40px rgba(232,255,71,0.4); }
+    50% { text-shadow: 0 0 40px rgba(232,255,71,1), 0 0 80px rgba(232,255,71,0.6); }
+  }
+
+  .score-bar-wrap { padding: 0 0 16px; }
+  .score-bar-track { height: 4px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1), background 0.4s; }
+
+  .slider-wrap { margin: 16px 0 20px; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 6px; background: var(--surface2); border-radius: 6px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 0 4px rgba(232,255,71,0.2); }
+  .slider-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  .tracklist-wrap { margin-bottom: 20px; }
+  .field-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .tracklist { background: var(--surface2); border-radius: 12px; overflow: hidden; }
+  .track-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .track-row:last-child { border-bottom: none; }
+  .track-num { font-family: var(--font-mono); font-size: 11px; color: var(--muted); width: 18px; flex-shrink: 0; text-align: right; }
+  .track-name { font-size: 13px; flex: 1; }
+  .track-duration { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .tracklist-msg { padding: 14px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; color: var(--text);
+    font-family: var(--font-display); font-size: 14px; line-height: 1.6;
+    outline: none; resize: none; height: 90px; transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+  .save-btn {
+    width: 100%; padding: 16px; margin-top: 16px;
+    background: var(--accent); color: #000; border: none; border-radius: 14px;
+    font-family: var(--font-display); font-size: 15px; font-weight: 800; cursor: pointer;
+  }
+  .save-btn:active { opacity: 0.9; }
+  .delete-btn {
+    width: 100%; padding: 14px; margin-top: 8px;
+    background: transparent; color: #ff4747; border: 1px solid rgba(255,71,71,0.3);
+    border-radius: 14px; font-family: var(--font-display); font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+
+  /* PROFILE / FOLLOW */
+  .profile-wrap { max-width: 600px; margin: 0 auto; padding: 0 16px; }
+  .profile-header { padding: 24px 0 20px; display: flex; align-items: center; gap: 16px; }
+  .profile-avatar {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: var(--accent-dim); border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: var(--accent); flex-shrink: 0;
+  }
+  .profile-info { flex: 1; }
+  .profile-username { font-size: 20px; font-weight: 800; }
+  .profile-stats { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .follow-btn {
+    padding: 8px 18px; border-radius: 20px; border: 1px solid var(--accent);
+    background: transparent; color: var(--accent);
+    font-family: var(--font-display); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  }
+  .follow-btn.following { background: var(--accent); color: #000; }
+
+  .user-search-box { display: flex; gap: 8px; margin-bottom: 16px; }
+  .user-search-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 14px; color: var(--text);
+    font-family: var(--font-display); font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  .user-search-input:focus { border-color: var(--accent); }
+  .user-search-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 16px; color: var(--text); font-family: var(--font-display); font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+  .user-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .user-row:last-child { border-bottom: none; }
+  .user-row-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--accent-dim); display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800; color: var(--accent); flex-shrink: 0;
+  }
+  .user-row-name { flex: 1; font-size: 14px; font-weight: 700; }
+  .user-row-count { font-size: 12px; color: var(--muted); }
+
+  /* STATS */
+  .stats-inner { max-width: 800px; margin: 0 auto; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 500; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .dist-wrap { padding: 0 16px 24px; }
+  .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; border-radius: 8px; padding: 4px; transition: background 0.15s; }
+  .dist-row:hover { background: var(--surface2); }
+  .dist-row.empty-band { cursor: default; opacity: 0.4; }
+  .dist-row.empty-band:hover { background: transparent; }
+  .dist-label { font-family: var(--font-mono); font-size: 12px; width: 50px; flex-shrink: 0; }
+  .dist-bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .dist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .dist-count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); width: 20px; text-align: right; }
+
+  /* BAND POPUP */
+  .band-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .band-overlay.open { display: flex; }
+  .band-modal {
+    width: 100%; max-width: 560px; background: var(--surface);
+    border-radius: 24px 24px 0 0; padding: 0 0 40px;
+    max-height: 75vh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .band-modal-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; margin-bottom: 4px; }
+
+  /* USER PROFILE MODAL */
+  .profile-overlay {
+    position: fixed; inset: 0; z-index: 250;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .profile-overlay.open { display: flex; }
+  .profile-modal {
+    width: 100%; max-width: 560px; background: var(--surface);
+    border-radius: 24px 24px 0 0; padding: 0 0 40px;
+    max-height: 85vh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 10px 20px; font-size: 13px; font-weight: 600;
+    opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .spinner { display: flex; justify-content: center; padding: 40px; }
+  .spin { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sort-wrap { display: flex; gap: 6px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
+  .sort-wrap::-webkit-scrollbar { display: none; }
+  .sort-btn {
+    padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-family: var(--font-display); font-size: 12px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  }
+  .sort-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-screen">
+    <div class="auth-logo">RATE<span>YOUR</span>ALBUMS</div>
+    <div class="auth-sub">Track every album you've ever heard</div>
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
+        <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+      <div id="authForm">
+        <div class="auth-field"><label>Username</label><input class="auth-input" id="authUsername" type="text" placeholder="yourname" autocomplete="username" autocapitalize="none"></div>
+        <div class="auth-field"><label>Password</label><input class="auth-input" id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+        <button class="auth-btn" id="authSubmitBtn" onclick="handleAuth()">Log In</button>
+        <div class="auth-error" id="authError"></div>
+        <div class="auth-hint" id="authHint">Username is case-sensitive. Min 6 chars for password.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none">
+  <header>
+    <div class="logo">RATE<span>YOUR</span>ALBUMS</div>
+    <div class="header-right">
+      <div class="lang-switcher">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ko')">KO</button>
+        <button class="lang-btn" onclick="setLang('pt')">PT</button>
+      </div>
+      <button class="user-btn" id="userMenuBtn" onclick="showUserMenu()">
+        <span id="headerUsername"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-search" onclick="switchTab('search',this)"></button>
+    <button class="tab" id="tab-ratings" onclick="switchTab('ratings',this)"></button>
+    <button class="tab" id="tab-people" onclick="switchTab('people',this)"></button>
+    <button class="tab" id="tab-stats" onclick="switchTab('stats',this)"></button>
+  </div>
+
+  <div class="view active" id="view-search">
+    <div class="search-wrap">
+      <div class="search-box">
+        <input class="search-input" id="searchInput" type="text" autocomplete="off">
+        <button class="search-btn" id="searchBtnEl" onclick="doSearch()"></button>
+      </div>
+    </div>
+    <div id="searchResults">
+      <div class="home-hero">
+        <div class="home-hero-title">✦ <span id="heroTitle"></span></div>
+        <div class="home-hero-sub" id="heroSub"></div>
+        <button class="home-refresh" id="refreshBtn" onclick="loadCuration()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span id="shuffleBtn"></span>
+        </button>
+      </div>
+      <div class="section-header" id="curationLabel"></div>
+      <div class="grid-wrap"><div class="results-grid" id="curationGrid"></div></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-ratings">
+    <div class="sort-wrap">
+      <button class="sort-btn active" id="sort-date" onclick="setSort('date',this)"></button>
+      <button class="sort-btn" id="sort-score-desc" onclick="setSort('score-desc',this)"></button>
+      <button class="sort-btn" id="sort-score-asc" onclick="setSort('score-asc',this)"></button>
+      <button class="sort-btn" id="sort-alpha" onclick="setSort('alpha',this)"></button>
+    </div>
+    <div id="myRatingsList"></div>
+  </div>
+
+  <div class="view" id="view-people">
+    <div class="profile-wrap">
+      <div class="section-header" id="findPeopleLabel"></div>
+      <div class="user-search-box">
+        <input class="user-search-input" id="userSearchInput" type="text" placeholder="Search username..." autocapitalize="none">
+        <button class="user-search-btn" onclick="searchUsers()">Search</button>
+      </div>
+      <div id="userSearchResults"></div>
+      <div class="section-header" id="followingLabel"></div>
+      <div id="followingList"></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-stats">
+    <div id="statsContent"></div>
+  </div>
+</div>
+
+<!-- RATING MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-top-bar">
+      <div style="width:32px"></div>
+      <div style="width:36px;height:4px;background:var(--border);border-radius:2px"></div>
+      <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-cover-wrap" id="modalCoverWrap"></div>
+    <div class="modal-body">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-artist" id="modalArtist"></div>
+      <div class="score-display">
+        <div class="perfect-stars" id="perfectStars">✦ ✦ ✦</div>
+        <div class="score-number" id="scoreDisplay">50</div>
+        <div class="score-label" id="gradeDisplay"></div>
+      </div>
+      <div class="score-bar-wrap"><div class="score-bar-track"><div class="score-bar-fill" id="scoreBarFill" style="width:50%"></div></div></div>
+      <div class="slider-wrap">
+        <input type="range" id="scoreSlider" min="0" max="100" value="50" oninput="updateScore(this.value)">
+        <div class="slider-labels"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+      <div class="tracklist-wrap">
+        <div class="field-label" id="tracklistLabel"></div>
+        <div class="tracklist" id="tracklistEl"></div>
+      </div>
+      <div class="field-label" id="commentLabel"></div>
+      <textarea id="commentInput"></textarea>
+      <button class="save-btn" id="saveBtnEl" onclick="saveRating()"></button>
+      <button class="delete-btn" id="deleteBtn" style="display:none" onclick="deleteRating()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- BAND POPUP -->
+<div class="band-overlay" id="bandOverlay" onclick="closeBandOutside(event)">
+  <div class="band-modal">
+    <div class="band-modal-top">
+      <div><div id="bandModalTitle" style="font-size:14px;font-weight:700"></div><div id="bandModalSubtitle" style="font-size:12px;color:var(--muted);margin-top:2px"></div></div>
+      <button class="modal-close-btn" onclick="closeBand()">✕</button>
+    </div>
+    <div id="bandList" style="padding:0 16px"></div>
+  </div>
+</div>
+
+<!-- USER PROFILE MODAL -->
+<div class="profile-overlay" id="profileOverlay" onclick="closeProfileOutside(event)">
+  <div class="profile-modal">
+    <div class="modal-top-bar">
+      <div style="width:32px"></div>
+      <div style="width:36px;height:4px;background:var(--border);border-radius:2px"></div>
+      <button class="modal-close-btn" onclick="closeProfile()">✕</button>
+    </div>
+    <div style="padding:0 16px">
+      <div class="profile-header">
+        <div class="profile-avatar" id="profileAvatar"></div>
+        <div class="profile-info">
+          <div class="profile-username" id="profileUsername"></div>
+          <div class="profile-stats" id="profileStats"></div>
+        </div>
+        <button class="follow-btn" id="followBtn" onclick="toggleFollow()"></button>
+      </div>
+      <div class="section-header" id="profileRatingsLabel">Ratings</div>
+      <div id="profileRatingsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://tgyluvtbjbiiwpiznqxw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_-2mLJHXy2kLYYyOqfvRjrg_VZu1XbUu';
+const LASTFM_KEY   = 'e8c18f3eac290af9a7bda25d563df9f0';
+
+// ── TRANSLATIONS ──────────────────────────────────────────────────
+const T = {
+  en: {
+    tabSearch:'Search', tabRatings:'My Ratings', tabPeople:'People', tabStats:'Stats',
+    searchPlaceholder:'Search albums or artists...', searchBtn:'Search',
+    heroTitle:"Today's Picks", heroSub:'Discover something new every time',
+    shuffleBtn:'Shuffle',
+    sortDate:'Recent', sortScoreDesc:'Highest', sortScoreAsc:'Lowest', sortAlpha:'A–Z',
+    ratingsCount: n=>`${n} rating${n!==1?'s':''}`,
+    searchCount: n=>`${n} result${n!==1?'s':''}`,
+    noResults:'No results found', noRatings:'No ratings yet.\nSearch for albums to get started!',
+    noStats:'No ratings yet.\nRate some albums to see your stats!',
+    tracklist:'Tracklist', noTracklist:'No tracklist available', tracklistLoading:'Loading...',
+    comment:'Comment', commentPlaceholder:'What do you think of this album...',
+    save:'Save', delete:'Delete', highest:'Highest', lowest:'Lowest',
+    distHint:'— tap to see list',
+    scoreLabels:{100:'✦ PERFECT ✦',90:'S — MASTERPIECE',80:'A — GREAT',70:'B — GOOD',60:'C — DECENT',50:'D — MEDIOCRE',0:'F — BAD'},
+    bandSubtitle: n=>`${n} album${n!==1?'s':''}`,
+    searchError:'Something went wrong.', curationError:'Failed to load.',
+    totalRatings:'Albums Rated', avgScore:'Avg Score',
+    totalStats:'Overview', bestWorst:'Best & Worst', distribution:'Score Distribution',
+    findPeople:'Find People', following:'Following',
+    follow:'Follow', unfollow:'Unfollow', followers:'followers', ratings:'ratings',
+    noFollowing:'Not following anyone yet.\nSearch for users above!',
+    userNotFound:'User not found.',
+    savedOk:'Rating saved!', deletedOk:'Rating deleted.',
+    logOut:'Log out',
+  },
+  ko: {
+    tabSearch:'검색', tabRatings:'내 레이팅', tabPeople:'피플', tabStats:'통계',
+    searchPlaceholder:'앨범 또는 아티스트 검색...', searchBtn:'검색',
+    heroTitle:'오늘의 추천', heroSub:'매번 새로운 앨범을 발견해보세요',
+    shuffleBtn:'새로 섞기',
+    sortDate:'최근 순', sortScoreDesc:'높은 점수', sortScoreAsc:'낮은 점수', sortAlpha:'알파벳 순',
+    ratingsCount: n=>`${n}개의 레이팅`,
+    searchCount: n=>`검색 결과 ${n}개`,
+    noResults:'검색 결과가 없어요', noRatings:'아직 레이팅한 앨범이 없어요.\n검색 탭에서 앨범을 찾아보세요!',
+    noStats:'레이팅이 없어요.\n앨범을 레이팅하면 통계가 보여요!',
+    tracklist:'수록곡', noTracklist:'수록곡 정보 없음', tracklistLoading:'불러오는 중...',
+    comment:'코멘트', commentPlaceholder:'이 앨범에 대한 생각을 남겨보세요...',
+    save:'저장하기', delete:'삭제하기', highest:'최고', lowest:'최저',
+    distHint:'— 탭해서 목록 보기',
+    scoreLabels:{100:'✦ PERFECT ✦',90:'S — 마스터피스',80:'A — 훌륭함',70:'B — 좋음',60:'C — 괜찮음',50:'D — 평범함',0:'F — 별로'},
+    bandSubtitle: n=>`${n}개의 앨범`,
+    searchError:'오류가 발생했어요.', curationError:'로드 실패.',
+    totalRatings:'레이팅한 앨범', avgScore:'평균 점수',
+    totalStats:'총 통계', bestWorst:'최고 & 최저', distribution:'점수 분포',
+    findPeople:'유저 찾기', following:'팔로잉',
+    follow:'팔로우', unfollow:'언팔로우', followers:'팔로워', ratings:'레이팅',
+    noFollowing:'아직 팔로우한 유저가 없어요.\n위에서 유저를 검색해보세요!',
+    userNotFound:'유저를 찾을 수 없어요.',
+    savedOk:'저장됐어요!', deletedOk:'삭제됐어요.',
+    logOut:'로그아웃',
+  },
+  pt: {
+    tabSearch:'Buscar', tabRatings:'Minhas Notas', tabPeople:'Pessoas', tabStats:'Estatísticas',
+    searchPlaceholder:'Buscar álbuns ou artistas...', searchBtn:'Buscar',
+    heroTitle:'Seleção do Dia', heroSub:'Descubra algo novo a cada vez',
+    shuffleBtn:'Embaralhar',
+    sortDate:'Recentes', sortScoreDesc:'Maior nota', sortScoreAsc:'Menor nota', sortAlpha:'A–Z',
+    ratingsCount: n=>`${n} nota${n!==1?'s':''}`,
+    searchCount: n=>`${n} resultado${n!==1?'s':''}`,
+    noResults:'Nenhum resultado', noRatings:'Nenhuma nota ainda.\nBusque álbuns para começar!',
+    noStats:'Nenhuma nota ainda.\nAvalie álbuns para ver suas estatísticas!',
+    tracklist:'Faixas', noTracklist:'Faixas indisponíveis', tracklistLoading:'Carregando...',
+    comment:'Comentário', commentPlaceholder:'O que você acha deste álbum...',
+    save:'Salvar', delete:'Excluir', highest:'Melhor', lowest:'Pior',
+    distHint:'— toque para ver lista',
+    scoreLabels:{100:'✦ PERFEITO ✦',90:'S — OBRA-PRIMA',80:'A — ÓTIMO',70:'B — BOM',60:'C — RAZOÁVEL',50:'D — MEDIANO',0:'F — RUIM'},
+    bandSubtitle: n=>`${n} álbum${n!==1?'ns':''}`,
+    searchError:'Algo deu errado.', curationError:'Falha ao carregar.',
+    totalRatings:'Álbuns Avaliados', avgScore:'Nota Média',
+    totalStats:'Visão Geral', bestWorst:'Melhor & Pior', distribution:'Distribuição',
+    findPeople:'Encontrar Pessoas', following:'Seguindo',
+    follow:'Seguir', unfollow:'Deixar de seguir', followers:'seguidores', ratings:'notas',
+    noFollowing:'Não seguindo ninguém ainda.\nBusque usuários acima!',
+    userNotFound:'Usuário não encontrado.',
+    savedOk:'Nota salva!', deletedOk:'Nota excluída.',
+    logOut:'Sair',
+  }
+};
+
+let lang = localStorage.getItem('ryaLang') || 'en';
+let currentUser = null;
+let currentAlbum = null;
+let currentSort = 'date';
+let currentProfileUser = null;
+let viewingProfileFollowing = false;
+let authMode = 'login';
+
+function t(key, ...args) {
+  const val = T[lang][key];
+  return typeof val === 'function' ? val(...args) : (val ?? key);
+}
+
+// ── DB HELPERS ────────────────────────────────────────────────────
+async function db(method, path, body) {
+  const opts = {
+    method, headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, opts);
+  if (!r.ok && r.status !== 204) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.message || r.statusText);
+  }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+async function dbGet(path)          { return db('GET', path); }
+async function dbPost(path, body)   { return db('POST', path, body); }
+async function dbPatch(path, body)  { return db('PATCH', path, body); }
+async function dbDelete(path)       { return db('DELETE', path); }
+
+// ── AUTH ──────────────────────────────────────────────────────────
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Log In' : 'Sign Up';
+  document.getElementById('authError').textContent = '';
+}
+
+async function hashPassword(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function handleAuth() {
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Please fill in all fields.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+
+  const btn = document.getElementById('authSubmitBtn');
+  btn.textContent = '...'; btn.disabled = true;
+
+  try {
+    const hash = await hashPassword(password);
+    if (authMode === 'signup') {
+      const existing = await dbGet(`profiles?username=eq.${encodeURIComponent(username)}&select=id`);
+      if (existing.length > 0) { errEl.textContent = 'Username already taken.'; return; }
+      const users = await dbPost('profiles', { username, password_hash: hash });
+      currentUser = users[0];
+    } else {
+      const users = await dbGet(`profiles?username=eq.${encodeURIComponent(username)}&select=*`);
+      if (!users.length) { errEl.textContent = 'User not found.'; return; }
+      if (users[0].password_hash !== hash) { errEl.textContent = 'Wrong password.'; return; }
+      currentUser = users[0];
+    }
+    localStorage.setItem('ryaUser', JSON.stringify({ id: currentUser.id, username: currentUser.username }));
+    startApp();
+  } catch(e) {
+    errEl.textContent = e.message || 'Something went wrong.';
+  } finally {
+    btn.textContent = authMode === 'login' ? 'Log In' : 'Sign Up';
+    btn.disabled = false;
+  }
+}
+
+function showUserMenu() {
+  if (confirm(`Log out as ${currentUser.username}?`)) logout();
+}
+
+function logout() {
+  localStorage.removeItem('ryaUser');
+  currentUser = null;
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('authUsername').value = '';
+  document.getElementById('authPassword').value = '';
+}
+
+async function startApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('headerUsername').textContent = currentUser.username;
+  setLang(lang);
+  applyTranslations();
+  loadCuration();
+  renderMyRatings();
+  loadFollowing();
+}
+
+// ── LANG ──────────────────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('ryaLang', l);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.lang-btn[onclick="setLang('${l}')"]`);
+  if (btn) btn.classList.add('active');
+  applyTranslations();
+  renderMyRatings();
+  if (document.getElementById('view-stats').classList.contains('active')) renderStats();
+}
+
+function applyTranslations() {
+  document.getElementById('tab-search').textContent    = t('tabSearch');
+  document.getElementById('tab-ratings').textContent   = t('tabRatings');
+  document.getElementById('tab-people').textContent    = t('tabPeople');
+  document.getElementById('tab-stats').textContent     = t('tabStats');
+  document.getElementById('searchInput').placeholder   = t('searchPlaceholder');
+  document.getElementById('searchBtnEl').textContent   = t('searchBtn');
+  document.getElementById('heroTitle').textContent     = t('heroTitle');
+  document.getElementById('heroSub').textContent       = t('heroSub');
+  document.getElementById('shuffleBtn').textContent    = t('shuffleBtn');
+  document.getElementById('sort-date').textContent     = t('sortDate');
+  document.getElementById('sort-score-desc').textContent = t('sortScoreDesc');
+  document.getElementById('sort-score-asc').textContent  = t('sortScoreAsc');
+  document.getElementById('sort-alpha').textContent    = t('sortAlpha');
+  document.getElementById('tracklistLabel').textContent = t('tracklist');
+  document.getElementById('commentLabel').textContent  = t('comment');
+  document.getElementById('commentInput').placeholder  = t('commentPlaceholder');
+  document.getElementById('saveBtnEl').textContent     = t('save');
+  document.getElementById('deleteBtn').textContent     = t('delete');
+  document.getElementById('findPeopleLabel').textContent = t('findPeople');
+  document.getElementById('followingLabel').textContent  = t('following');
+}
+
+// ── CURATION ──────────────────────────────────────────────────────
+const CURATION_SOURCES = [
+  { method:'chart.gettopalbums', label:'🔥 Trending Now', params:'' },
+  { method:'tag.gettopalbums', label:'🎸 Rock', params:'&tag=rock' },
+  { method:'tag.gettopalbums', label:'🎹 Jazz', params:'&tag=jazz' },
+  { method:'tag.gettopalbums', label:'💿 Hip-Hop', params:'&tag=hip-hop' },
+  { method:'tag.gettopalbums', label:'🌙 R&B', params:'&tag=rnb' },
+  { method:'tag.gettopalbums', label:'⚡ Electronic', params:'&tag=electronic' },
+  { method:'tag.gettopalbums', label:'🎻 Classical', params:'&tag=classical' },
+  { method:'tag.gettopalbums', label:'🌊 Indie', params:'&tag=indie' },
+  { method:'tag.gettopalbums', label:'🖤 Metal', params:'&tag=metal' },
+  { method:'tag.gettopalbums', label:'🎷 Soul', params:'&tag=soul' },
+  { method:'tag.gettopalbums', label:'🌿 Folk', params:'&tag=folk' },
+  { method:'tag.gettopalbums', label:'🎙️ K-Pop', params:'&tag=k-pop' },
+];
+
+function scoreGrade(n) {
+  n = parseInt(n);
+  const sl = T[lang].scoreLabels;
+  if (n===100) return {label:sl[100],cls:'score-perfect',color:'#ffffff'};
+  if (n>=90)   return {label:sl[90], cls:'score-s',color:'#e8ff47'};
+  if (n>=80)   return {label:sl[80], cls:'score-a',color:'#47d4ff'};
+  if (n>=70)   return {label:sl[70], cls:'score-b',color:'#47ff9c'};
+  if (n>=60)   return {label:sl[60], cls:'score-c',color:'#ffaa47'};
+  if (n>=50)   return {label:sl[50], cls:'score-d',color:'#ff6b47'};
+  return {label:sl[0],cls:'score-f',color:'#ff4747'};
+}
+
+function getBigCover(images) {
+  if (!images) return null;
+  for (const size of ['extralarge','large','medium','small']) {
+    const img = images.find(i => i.size===size);
+    if (img && img['#text'] && img['#text']!=='') return img['#text'];
+  }
+  return null;
+}
+
+function shuffle(arr) {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function normalizeStr(s) {
+  return (s||'').toLowerCase().replace(/[\s\/\-_.,!?'"()]/g,'');
+}
+
+function dedupe(albums) {
+  const seen = new Set();
+  return albums.filter(a => {
+    const artist = normalizeStr(a.artist?.name||a.artist||'');
+    const name   = normalizeStr(a.name||'');
+    const key = `${artist}__${name}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+}
+
+async function loadCuration() {
+  const grid = document.getElementById('curationGrid');
+  const label = document.getElementById('curationLabel');
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  grid.innerHTML = `<div style="grid-column:1/-1;display:flex;justify-content:center;padding:40px"><div class="spin"></div></div>`;
+  const src = CURATION_SOURCES[Math.floor(Math.random()*CURATION_SOURCES.length)];
+  label.textContent = src.label;
+  try {
+    const r = await fetch(`https://ws.audioscrobbler.com/2.0/?method=${src.method}&api_key=${LASTFM_KEY}&format=json&limit=50${src.params}`);
+    const d = await r.json();
+    let raw = d.albums?.album || d.topalbums?.album || [];
+    if (!Array.isArray(raw)) raw=[raw];
+    const albums = shuffle(dedupe(raw.filter(a=>getBigCover(a.image)))).slice(0,20);
+    renderAlbumGrid(albums, grid);
+  } catch {
+    grid.innerHTML = `<div style="grid-column:1/-1" class="empty">${t('curationError')}</div>`;
+  }
+  btn.classList.remove('spinning');
+}
+
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  const container = document.getElementById('searchResults');
+  container.innerHTML = '<div class="spinner"><div class="spin"></div></div>';
+  try {
+    const r = await fetch(`https://ws.audioscrobbler.com/2.0/?method=album.search&album=${encodeURIComponent(q)}&api_key=${LASTFM_KEY}&format=json&limit=50`);
+    const d = await r.json();
+    const albums = dedupe((d.results?.albummatches?.album||[]).filter(a=>getBigCover(a.image)));
+    if (!albums.length) { container.innerHTML=`<div class="empty"><div class="empty-icon">◎</div>${t('noResults')}</div>`; return; }
+    container.innerHTML=`<div class="section-header">${t('searchCount',albums.length)}</div><div class="grid-wrap"><div class="results-grid" id="searchGrid"></div></div>`;
+    renderAlbumGrid(albums, document.getElementById('searchGrid'));
+  } catch { container.innerHTML=`<div class="empty">${t('searchError')}</div>`; }
+}
+
+function albumKey(album) {
+  return `${album.artist?.name||album.artist||''}__${album.name}`;
+}
+
+// Load user's ratings from DB
+let myRatingsCache = {};
+async function loadMyRatings() {
+  if (!currentUser) return;
+  const rows = await dbGet(`ratings?user_id=eq.${currentUser.id}&select=*`);
+  myRatingsCache = {};
+  rows.forEach(r => { myRatingsCache[r.album_key] = r; });
+}
+
+function renderAlbumGrid(albums, grid) {
+  grid.innerHTML = albums.map(a => {
+    const cover = getBigCover(a.image);
+    const key = albumKey(a);
+    const myR = myRatingsCache[key];
+    const badge = myR ? `<div class="rating-badge ${scoreGrade(myR.score).cls}">${myR.score}</div>` : '';
+    const safe = encodeURIComponent(JSON.stringify(a));
+    return `<div class="album-card ${myR?'rated':''}" onclick="openModalEncoded('${safe}')">
+      <img class="album-cover" src="${cover}" alt="" loading="lazy">
+      ${badge}
+      <div class="album-info">
+        <div class="album-title">${a.name}</div>
+        <div class="album-artist">${a.artist?.name||a.artist||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openModalEncoded(enc) { openModal(JSON.parse(decodeURIComponent(enc))); }
+
+async function openModal(album) {
+  currentAlbum = album;
+  const key = albumKey(album);
+  const ex = myRatingsCache[key];
+  const score = ex ? ex.score : 50;
+  const cover = getBigCover(album.image);
+  const artistName = album.artist?.name||album.artist||'';
+  document.getElementById('modalCoverWrap').innerHTML = cover
+    ? `<img class="modal-cover" src="${cover}" alt=""><div class="modal-cover-gradient"></div>`
+    : `<div style="height:20px"></div>`;
+  document.getElementById('modalTitle').textContent = album.name;
+  document.getElementById('modalArtist').textContent = artistName;
+  document.getElementById('scoreSlider').value = score;
+  document.getElementById('commentInput').value = ex?.comment||'';
+  document.getElementById('commentInput').placeholder = t('commentPlaceholder');
+  document.getElementById('deleteBtn').style.display = ex ? 'block':'none';
+  document.getElementById('saveBtnEl').textContent = t('save');
+  document.getElementById('deleteBtn').textContent = t('delete');
+  document.getElementById('tracklistLabel').textContent = t('tracklist');
+  updateScore(score);
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  loadTracklist(artistName, album.name);
+}
+
+async function loadTracklist(artist, album) {
+  const el = document.getElementById('tracklistEl');
+  el.innerHTML = `<div class="tracklist-msg">${t('tracklistLoading')}</div>`;
+  try {
+    const r = await fetch(`https://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(album)}&format=json`);
+    const d = await r.json();
+    const tracks = d.album?.tracks?.track;
+    if (!tracks||(Array.isArray(tracks)&&!tracks.length)) { el.innerHTML=`<div class="tracklist-msg">${t('noTracklist')}</div>`; return; }
+    const list = Array.isArray(tracks)?tracks:[tracks];
+    el.innerHTML = list.map((tr,i)=>{
+      const dur=tr.duration?`${Math.floor(tr.duration/60)}:${String(tr.duration%60).padStart(2,'0')}`:'';
+      return `<div class="track-row"><div class="track-num">${i+1}</div><div class="track-name">${tr.name}</div><div class="track-duration">${dur}</div></div>`;
+    }).join('');
+  } catch { el.innerHTML=`<div class="tracklist-msg">${t('noTracklist')}</div>`; }
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; }
+function closeModalOutside(e) { if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+
+function updateScore(val) {
+  val=parseInt(val);
+  const g=scoreGrade(val);
+  const scoreEl=document.getElementById('scoreDisplay');
+  const starsEl=document.getElementById('perfectStars');
+  scoreEl.textContent=val; scoreEl.style.color=g.color;
+  document.getElementById('gradeDisplay').textContent=g.label;
+  document.getElementById('gradeDisplay').style.color=g.color;
+  document.getElementById('scoreBarFill').style.width=val+'%';
+  if(val===100){
+    document.getElementById('scoreBarFill').style.background='linear-gradient(90deg,#e8ff47,#fff)';
+    scoreEl.classList.add('perfect-glow'); starsEl.classList.add('show');
+  } else {
+    document.getElementById('scoreBarFill').style.background=g.color;
+    scoreEl.classList.remove('perfect-glow'); starsEl.classList.remove('show');
+  }
+}
+
+async function saveRating() {
+  if(!currentAlbum||!currentUser) return;
+  const key=albumKey(currentAlbum);
+  const artistName=currentAlbum.artist?.name||currentAlbum.artist||'';
+  const payload = {
+    user_id: currentUser.id,
+    album_key: key,
+    album_name: currentAlbum.name,
+    album_artist: artistName,
+    album_cover: getBigCover(currentAlbum.image)||'',
+    score: parseInt(document.getElementById('scoreSlider').value),
+    comment: document.getElementById('commentInput').value.trim(),
+    saved_at: Date.now()
+  };
+  try {
+    const existing = myRatingsCache[key];
+    if(existing) {
+      await dbPatch(`ratings?id=eq.${existing.id}`, payload);
+      myRatingsCache[key]={...existing,...payload};
+    } else {
+      const rows = await dbPost('ratings', payload);
+      myRatingsCache[key]=rows[0];
+    }
+    showToast(t('savedOk'));
+    closeModal();
+    renderMyRatings();
+    renderStats();
+  } catch(e) { alert(e.message); }
+}
+
+async function deleteRating() {
+  if(!currentAlbum||!currentUser) return;
+  const key=albumKey(currentAlbum);
+  const existing=myRatingsCache[key];
+  if(!existing) return;
+  try {
+    await dbDelete(`ratings?id=eq.${existing.id}`);
+    delete myRatingsCache[key];
+    showToast(t('deletedOk'));
+    closeModal();
+    renderMyRatings();
+    renderStats();
+  } catch(e) { alert(e.message); }
+}
+
+function setSort(s,btn) {
+  currentSort=s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMyRatings();
+}
+
+function renderRatingRow(r, isOwn=true) {
+  const g=scoreGrade(r.score);
+  const fakeAlbum={name:r.album_name,artist:r.album_artist,image:[{'#text':r.album_cover||'','size':'extralarge'}]};
+  const safe=encodeURIComponent(JSON.stringify(fakeAlbum));
+  const coverHtml=r.album_cover
+    ?`<img class="rating-row-cover" src="${r.album_cover}" alt="">`
+    :`<div class="rating-row-cover" style="display:flex;align-items:center;justify-content:center;font-size:20px;opacity:0.3">♪</div>`;
+  return `<div class="rating-row" onclick="${isOwn?`openModalEncoded('${safe}')`:''}">
+    ${coverHtml}
+    <div class="rating-row-info">
+      <div class="rating-row-title">${r.album_name}</div>
+      <div class="rating-row-artist">${r.album_artist}</div>
+    </div>
+    <div class="rating-row-score" style="color:${g.color}">${r.score}</div>
+  </div>`;
+}
+
+function renderMyRatings() {
+  const el=document.getElementById('myRatingsList');
+  let items=Object.values(myRatingsCache);
+  if(!items.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">♫</div>${t('noRatings').replace('\n','<br>')}</div>`;
+    return;
+  }
+  if(currentSort==='date') items.sort((a,b)=>b.saved_at-a.saved_at);
+  else if(currentSort==='score-desc') items.sort((a,b)=>b.score-a.score);
+  else if(currentSort==='score-asc') items.sort((a,b)=>a.score-b.score);
+  else items.sort((a,b)=>a.album_name.localeCompare(b.album_name));
+  el.innerHTML=`<div class="section-header">${t('ratingsCount',items.length)}</div><div class="ratings-list">${items.map(r=>renderRatingRow(r,true)).join('')}</div>`;
+}
+
+// ── PEOPLE / FOLLOW ───────────────────────────────────────────────
+let followingCache = new Set();
+
+async function loadFollowing() {
+  if(!currentUser) return;
+  const rows=await dbGet(`follows?follower_id=eq.${currentUser.id}&select=following_id`);
+  followingCache=new Set(rows.map(r=>r.following_id));
+  renderFollowingList();
+}
+
+async function renderFollowingList() {
+  const el=document.getElementById('followingList');
+  if(!followingCache.size){
+    el.innerHTML=`<div class="empty" style="padding:20px 0"><div class="empty-icon" style="font-size:24px">◎</div>${t('noFollowing').replace('\n','<br>')}</div>`;
+    return;
+  }
+  const ids=[...followingCache].map(id=>`id=eq.${id}`).join(',');
+  const users=await dbGet(`profiles?or=(${ids})&select=id,username`);
+  const ratingsCount=await Promise.all(users.map(u=>dbGet(`ratings?user_id=eq.${u.id}&select=id`)));
+  el.innerHTML=`<div class="ratings-list">${users.map((u,i)=>`
+    <div class="user-row" onclick="openProfile('${u.id}','${u.username}')">
+      <div class="user-row-avatar">${u.username[0].toUpperCase()}</div>
+      <div class="user-row-name">@${u.username}</div>
+      <div class="user-row-count">${ratingsCount[i].length} ${t('ratings')}</div>
+    </div>`).join('')}</div>`;
+}
+
+async function searchUsers() {
+  const q=document.getElementById('userSearchInput').value.trim();
+  if(!q) return;
+  const el=document.getElementById('userSearchResults');
+  el.innerHTML='<div class="spinner"><div class="spin"></div></div>';
+  const users=await dbGet(`profiles?username=ilike.*${encodeURIComponent(q)}*&select=id,username&limit=10`);
+  const filtered=users.filter(u=>u.id!==currentUser.id);
+  if(!filtered.length){el.innerHTML=`<div style="padding:12px 0;color:var(--muted);font-size:13px">${t('userNotFound')}</div>`;return;}
+  el.innerHTML=`<div class="ratings-list">${filtered.map(u=>`
+    <div class="user-row" onclick="openProfile('${u.id}','${u.username}')">
+      <div class="user-row-avatar">${u.username[0].toUpperCase()}</div>
+      <div class="user-row-name">@${u.username}</div>
+      <div class="user-row-count">${followingCache.has(u.id)?'✓':''}</div>
+    </div>`).join('')}</div>`;
+}
+
+async function openProfile(userId, username) {
+  currentProfileUser={id:userId,username};
+  document.getElementById('profileAvatar').textContent=username[0].toUpperCase();
+  document.getElementById('profileUsername').textContent='@'+username;
+  document.getElementById('profileStats').textContent='Loading...';
+  const followBtn=document.getElementById('followBtn');
+  const isFollowing=followingCache.has(userId);
+  followBtn.textContent=isFollowing?t('unfollow'):t('follow');
+  followBtn.className='follow-btn'+(isFollowing?' following':'');
+  document.getElementById('profileRatingsList').innerHTML='<div class="spinner"><div class="spin"></div></div>';
+  document.getElementById('profileOverlay').classList.add('open');
+  const [ratings, followers]=await Promise.all([
+    dbGet(`ratings?user_id=eq.${userId}&select=*&order=saved_at.desc`),
+    dbGet(`follows?following_id=eq.${userId}&select=follower_id`)
+  ]);
+  document.getElementById('profileStats').textContent=`${ratings.length} ${t('ratings')} · ${followers.length} ${t('followers')}`;
+  document.getElementById('profileRatingsList').innerHTML=ratings.length
+    ?`<div class="ratings-list">${ratings.map(r=>renderRatingRow(r,false)).join('')}</div>`
+    :`<div class="empty" style="padding:20px 0">No ratings yet.</div>`;
+}
+
+async function toggleFollow() {
+  if(!currentProfileUser||!currentUser) return;
+  const uid=currentProfileUser.id;
+  const btn=document.getElementById('followBtn');
+  if(followingCache.has(uid)){
+    await dbDelete(`follows?follower_id=eq.${currentUser.id}&following_id=eq.${uid}`);
+    followingCache.delete(uid);
+    btn.textContent=t('follow'); btn.className='follow-btn';
+  } else {
+    await dbPost('follows',{follower_id:currentUser.id,following_id:uid});
+    followingCache.add(uid);
+    btn.textContent=t('unfollow'); btn.className='follow-btn following';
+  }
+  renderFollowingList();
+}
+
+function closeProfile() { document.getElementById('profileOverlay').classList.remove('open'); }
+function closeProfileOutside(e) { if(e.target===document.getElementById('profileOverlay')) closeProfile(); }
+
+// ── STATS ─────────────────────────────────────────────────────────
+function openBand(idx) {
+  if(!window.bands) return;
+  const b=window.bands[idx];
+  const items=Object.values(myRatingsCache).filter(b.filter).sort((a,c)=>c.score-a.score);
+  if(!items.length) return;
+  document.getElementById('bandModalTitle').textContent=b.label;
+  document.getElementById('bandModalTitle').style.color=b.color;
+  document.getElementById('bandModalSubtitle').textContent=t('bandSubtitle',items.length);
+  document.getElementById('bandList').innerHTML=items.map(r=>renderRatingRow(r,true)).join('');
+  document.getElementById('bandOverlay').classList.add('open');
+}
+function closeBand() { document.getElementById('bandOverlay').classList.remove('open'); }
+function closeBandOutside(e) { if(e.target===document.getElementById('bandOverlay')) closeBand(); }
+
+function renderStats() {
+  const el=document.getElementById('statsContent');
+  const items=Object.values(myRatingsCache);
+  if(!items.length){
+    el.innerHTML=`<div class="empty" style="padding-top:80px"><div class="empty-icon">◈</div>${t('noStats').replace('\n','<br>')}</div>`;
+    return;
+  }
+  const avg=Math.round(items.reduce((s,r)=>s+r.score,0)/items.length);
+  const best=items.reduce((a,b)=>a.score>b.score?a:b);
+  const worst=items.reduce((a,b)=>a.score<b.score?a:b);
+  const bands=[
+    {label:'100',   color:'#ffffff',filter:r=>r.score===100},
+    {label:'90–99', color:'#e8ff47',filter:r=>r.score>=90&&r.score<100},
+    {label:'80–89', color:'#47d4ff',filter:r=>r.score>=80&&r.score<90},
+    {label:'70–79', color:'#47ff9c',filter:r=>r.score>=70&&r.score<80},
+    {label:'60–69', color:'#ffaa47',filter:r=>r.score>=60&&r.score<70},
+    {label:'50–59', color:'#ff6b47',filter:r=>r.score>=50&&r.score<60},
+    {label:'0–49',  color:'#ff4747',filter:r=>r.score<50},
+  ];
+  window.bands=bands;
+  const counts=bands.map(b=>items.filter(b.filter).length);
+  const max=Math.max(...counts,1);
+  el.innerHTML=`<div class="stats-inner">
+    <div class="section-header">${t('totalStats')}</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:var(--accent)">${items.length}</div><div class="stat-label">${t('totalRatings')}</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${scoreGrade(avg).color}">${avg}</div><div class="stat-label">${t('avgScore')}</div></div>
+    </div>
+    <div class="section-header">${t('bestWorst')}</div>
+    <div style="padding:0 16px 20px;display:flex;flex-direction:column;gap:10px;max-width:800px;margin:0 auto">
+      ${[['highest',best],['lowest',worst]].map(([lk,r])=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border-radius:14px;border:1px solid var(--border)">
+        ${r.album_cover?`<img style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0" src="${r.album_cover}" alt="">`:
+        `<div style="width:52px;height:52px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:20px;opacity:0.3;flex-shrink:0">♪</div>`}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px">${t(lk)}</div>
+          <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.album_name}</div>
+          <div style="font-size:12px;color:var(--muted)">${r.album_artist}</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:20px;color:${scoreGrade(r.score).color};flex-shrink:0">${r.score}</div>
+      </div>`).join('')}
+    </div>
+    <div class="section-header">${t('distribution')} <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)">${t('distHint')}</span></div>
+    <div class="dist-wrap">
+      ${bands.map((b,i)=>`
+      <div class="dist-row ${counts[i]===0?'empty-band':''}" onclick="openBand(${i})">
+        <div class="dist-label" style="color:${b.color}">${b.label}</div>
+        <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${counts[i]/max*100}%;background:${b.color}"></div></div>
+        <div class="dist-count">${counts[i]}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if(tab==='ratings') renderMyRatings();
+  if(tab==='stats') renderStats();
+  if(tab==='people') { loadFollowing(); }
+}
+
+function resetToHome() {
+  document.getElementById('searchResults').innerHTML=`
+    <div class="home-hero">
+      <div class="home-hero-title">✦ <span id="heroTitle">${t('heroTitle')}</span></div>
+      <div class="home-hero-sub" id="heroSub">${t('heroSub')}</div>
+      <button class="home-refresh" id="refreshBtn" onclick="loadCuration()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span id="shuffleBtn">${t('shuffleBtn')}</span>
+      </button>
+    </div>
+    <div class="section-header" id="curationLabel"></div>
+    <div class="grid-wrap"><div class="results-grid" id="curationGrid"></div></div>`;
+  loadCuration();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+document.getElementById('searchInput').addEventListener('input',e=>{if(!e.target.value)resetToHome();});
+document.getElementById('userSearchInput').addEventListener('keydown',e=>{if(e.key==='Enter')searchUsers();});
+document.getElementById('authUsername').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('authPassword').focus();});
+document.getElementById('authPassword').addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth();});
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// Auto-login
+const saved=localStorage.getItem('ryaUser');
+if(saved) {
+  currentUser=JSON.parse(saved);
+  loadMyRatings().then(()=>startApp());
+} else {
+  document.getElementById('authScreen').style.display='flex';
+}
+
+// Set initial lang button
+document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+const lb=document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`);
+if(lb) lb.classList.add('active');
+</script>
+</body>
+</html>
